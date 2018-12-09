@@ -1,4 +1,54 @@
+# bookstore.py
+
+import backend
 from tkinter import *
+
+
+def get_selected_row(event):
+    index = display_area.curselection()[0]
+    global item_id
+    item = display_area.get(index)
+    item_id = item[0]
+    print(display_area.get(index))
+    for data, entry in zip((item[1], item[2], item[3], item[4]), (title_box, author_box, year_box, isbn_box)):
+        entry.delete(0, END)
+        entry.insert(END, data)
+
+
+def view_command():
+    display_area.delete(0, END)
+    for item in backend.view():
+        display_area.insert(END, item)
+
+
+def search_command():
+    display_area.delete(0, END)
+    for item in backend.search(title_text.get(), author_text.get(), year_text.get(), isbn_text.get()):
+        display_area.insert(END, item)
+
+
+def add_command():
+    backend.insert(title_text.get(), author_text.get(), year_text.get(), isbn_text.get())
+    display_area.delete(0, END)
+    for item in backend.search(title_text.get(), author_text.get(), year_text.get(), isbn_text.get()):
+        display_area.insert(END, item)
+    for entry in [title_box, author_box, year_box, isbn_box]:
+        entry.delete(0, END)
+
+
+def update_command():
+    backend.update(title_text.get(), author_text.get(), year_text.get(), isbn_text.get(), item_id)
+    view_command()
+
+
+def delete_command():
+    backend.delete(item_id)
+    view_command()
+
+
+def close_command():
+    window.destroy()
+
 
 window = Tk()
 
@@ -34,27 +84,38 @@ sb.grid(row=3, column=2, rowspan=6)
 display_area.configure(yscrollcommand=sb.set)
 sb.configure(command=display_area.yview)
 
-# side widgets
-view_all = Button(window, text='View All', width=15)
-view_all.grid(rowspan=2, column=3)
+display_area.bind('<<ListboxSelect>>', get_selected_row)
 
-search_entry = Button(window, text='Search Entry', width=15)
+# side widgets
+view_all = Button(window, text='View All', width=15, command=view_command)
+view_all.grid(row=2, column=3, rowspan=2)
+
+
+search_entry = Button(window, text='Search Entry', width=15, command=search_command)
 search_entry.grid(row=4, column=3)
 
 
-add_entry = Button(window, text='Add Entry', width=15)
+add_entry = Button(window, text='Add Entry', width=15, command=add_command)
 add_entry.grid(row=5, column=3)
 
 
-update_button = Button(window, text='Update', width=15)
+update_button = Button(window, text='Update', width=15, command=update_command)
 update_button.grid(row=6, column=3)
 
 
-delete_button = Button(window, text='Delete', width=15)
+delete_button = Button(window, text='Delete', width=15, command=delete_command)
 delete_button.grid(row=7, column=3)
 
-close_button = Button(window, text='Close', width=15)
+close_button = Button(window, text='Close', width=15, command=close_command)
 close_button.grid(row=8, column=3)
 
 
 window.mainloop()
+
+# (1, 'Ion', 'Liviu Rebreanu', 1954, 111)
+# (2, 'Enigma Otiliei', 'George Calinescu', 1938, 222)
+# (3, 'Toate panzele sus!', 'Radu Tudoran', 1954, 333)
+# (4, '100 de poeme alese', 'Mihai Eminescu', 1973, 444)
+# (6, 'Povestea lui Harap-Alb', 'Ion Creanga', 1877, 666)
+# (7, 'Morometii', 'Marin Preda', 1955, 777)
+# (8, 'O scrisoare pierduta', 'I. L. Caragiale', 1884, 888)

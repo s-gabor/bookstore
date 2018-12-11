@@ -5,14 +5,17 @@ from tkinter import *
 
 
 def get_selected_row(event):
-    index = display_area.curselection()[0]
-    global item_id
-    item = display_area.get(index)
-    item_id = item[0]
-    print(display_area.get(index))
-    for data, entry in zip((item[1], item[2], item[3], item[4]), (title_box, author_box, year_box, isbn_box)):
-        entry.delete(0, END)
-        entry.insert(END, data)
+    try:
+        row_number = display_area.curselection()[0]
+        global selected_tuple
+        selected_tuple = display_area.get(row_number)
+        for data, entry in zip((selected_tuple[1], selected_tuple[2], selected_tuple[3], selected_tuple[4]),
+                               (title_box, author_box, year_box, isbn_box)):
+            entry.delete(0, END)
+            entry.insert(END, data)
+    except IndexError as e:
+        print('It looks like no selection was made. Exception was silenced: ', e)
+        display_area.insert(END, e)
 
 
 def view_command():
@@ -37,12 +40,12 @@ def add_command():
 
 
 def update_command():
-    backend.update(title_text.get(), author_text.get(), year_text.get(), isbn_text.get(), item_id)
+    backend.update(title_text.get(), author_text.get(), year_text.get(), isbn_text.get(), selected_tuple[0])
     view_command()
 
 
 def delete_command():
-    backend.delete(item_id)
+    backend.delete(selected_tuple[0])
     view_command()
 
 
@@ -112,10 +115,10 @@ close_button.grid(row=8, column=3)
 
 window.mainloop()
 
-# (1, 'Ion', 'Liviu Rebreanu', 1954, 111)
-# (2, 'Enigma Otiliei', 'George Calinescu', 1938, 222)
-# (3, 'Toate panzele sus!', 'Radu Tudoran', 1954, 333)
-# (4, '100 de poeme alese', 'Mihai Eminescu', 1973, 444)
-# (6, 'Povestea lui Harap-Alb', 'Ion Creanga', 1877, 666)
-# (7, 'Morometii', 'Marin Preda', 1955, 777)
-# (8, 'O scrisoare pierduta', 'I. L. Caragiale', 1884, 888)
+# ('Ion', 'Liviu Rebreanu', 1954, 111)
+# ('Enigma Otiliei', 'George Calinescu', 1938, 222)
+# ('Toate panzele sus!', 'Radu Tudoran', 1954, 333)
+# ('100 de poeme alese', 'Mihai Eminescu', 1973, 444)
+# ('Povestea lui Harap-Alb', 'Ion Creanga', 1877, 666)
+# ('Morometii', 'Marin Preda', 1955, 777)
+# ('O scrisoare pierduta', 'I. L. Caragiale', 1884, 888)

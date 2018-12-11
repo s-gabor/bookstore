@@ -62,5 +62,5 @@ def update(title, author, year, isbn, id_):
 # update(6, 'Povestea lui Harap-Alb', 'Ion Creanga', 1877, 39874345654)
 # print(view())
 # update('100 de poeme alese', 'Mihai Eminescu', 1973, 77777, 4)
-for item in view():
-    print(item)
+# for item in view():
+#     print(item)

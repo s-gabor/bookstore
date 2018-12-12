@@ -4,115 +4,100 @@ from tkinter import *
 from backend import Database
 
 
-def get_selected_row(event):
-    try:
-        row_number = display_area.curselection()[0]
-        global selected_tuple
-        selected_tuple = display_area.get(row_number)
-        for data, entry in zip((selected_tuple[1], selected_tuple[2], selected_tuple[3], selected_tuple[4]),
-                               (title_box, author_box, year_box, isbn_box)):
+class Bookstore:
+
+    def __init__(self, win):
+        self.win = win
+        self.db = Database('books.db')
+        self.selected_row = None
+        self.input_texts = []
+        self.input_boxes = []
+
+    def create_widget(self, text, row, column):
+        label = Label(self.win, text=text)
+        label.grid(row=row, column=column)
+        text = StringVar()
+        box = Entry(self.win, textvariable=text)
+        box.grid(row=row, column=column+1)
+        self.input_texts.append(text)
+        self.input_boxes.append(box)
+
+    def create_display(self, row, column, rowspan, columnspan):
+        listbox = Listbox(self.win, height=6, width=30)
+        listbox.grid(row=row, column=column, rowspan=rowspan, columnspan=columnspan)
+        sb = Scrollbar(self.win)
+        sb.grid(row=row, column=(column+columnspan), rowspan=rowspan)
+        listbox.configure(yscrollcommand=sb.set)
+        sb.configure(command=listbox.yview)
+        listbox.bind('<<ListboxSelect>>', self.get_selected_row)
+        self.lb = listbox
+
+    def create_button(self, label, width, command, row, column):
+        button = Button(self.win, text=label, width=width, command=command)
+        button.grid(row=row, column=column)
+
+    def get_selected_row(self, event):
+        try:
+            row_number = self.lb.curselection()[0]
+            self.selected_row = self.lb.get(row_number)
+            for data, entry in zip((self.selected_row[1], self.selected_row[2], self.selected_row[3], self.selected_row[4]),
+                                   (self.input_boxes[0], self.input_boxes[1], self.input_boxes[2], self.input_boxes[3])):
+                entry.delete(0, END)
+                entry.insert(END, data)
+        except IndexError as e:
+            print('It looks like no selection was made. The following exception was silenced:\n', e)
+            self.lb.insert(END, 'Please select a valid entry!')
+
+    def view_command(self):
+        self.lb.delete(0, END)
+        for item in self.db.view():
+            self.lb.insert(END, item)
+
+    def search_command(self):
+        self.lb.delete(0, END)
+        for item in self.db.search(self.input_texts[0].get(), self.input_texts[1].get(), self.input_texts[2].get(), self.input_texts[3].get()):
+            self.lb.insert(END, item)
+
+    def add_command(self):
+        self.db.insert(self.input_texts[0].get(), self.input_texts[1].get(), self.input_texts[2].get(), self.input_texts[3].get())
+        self.lb.delete(0, END)
+        data = self.db.search(self.input_texts[0].get(), self.input_texts[1].get(), self.input_texts[2].get(), self.input_texts[3].get())
+        print(data)
+        for item in data:
+            self.lb.insert(END, item)
+        for entry in self.input_boxes:
             entry.delete(0, END)
-            entry.insert(END, data)
-    except IndexError as e:
-        print('It looks like no selection was made. Exception was silenced: ', e)
-        display_area.insert(END, e)
+        self.view_command()
+
+    def update_command(self):
+        self.db.update(self.input_texts[0].get(), self.input_texts[1].get(), self.input_texts[2].get(), self.input_texts[3].get(), self.selected_row[0])
+        self.view_command()
+
+    def delete_command(self):
+        self.db.delete(self.selected_row[0])
+        self.view_command()
+
+    def close_command(self):
+        self.win.destroy()
 
 
-def view_command():
-    display_area.delete(0, END)
-    for item in db.view():
-        display_area.insert(END, item)
-
-
-def search_command():
-    display_area.delete(0, END)
-    for item in db.search(title_text.get(), author_text.get(), year_text.get(), isbn_text.get()):
-        display_area.insert(END, item)
-
-
-def add_command():
-    db.insert(title_text.get(), author_text.get(), year_text.get(), isbn_text.get())
-    display_area.delete(0, END)
-    for item in db.search(title_text.get(), author_text.get(), year_text.get(), isbn_text.get()):
-        display_area.insert(END, item)
-    for entry in [title_box, author_box, year_box, isbn_box]:
-        entry.delete(0, END)
-
-
-def update_command():
-    db.update(title_text.get(), author_text.get(), year_text.get(), isbn_text.get(), selected_tuple[0])
-    view_command()
-
-
-def delete_command():
-    db.delete(selected_tuple[0])
-    view_command()
-
-
-def close_command():
-    window.destroy()
-
-
-db = Database('books.db')
 window = Tk()
 
-title_label = Label(window, text='Title')
-author_label = Label(window, text='Author')
-year_label = Label(window, text='Year')
-ISBN_label = Label(window, text='ISBN')
-title_label.grid(row=0, column=0)
-author_label.grid(row=0, column=2)
-year_label.grid(row=1, column=0)
-ISBN_label.grid(row=1, column=2)
+books = Bookstore(window)
 
-title_text = StringVar()
-title_box = Entry(window, textvariable=title_text)
-title_box.grid(row=0, column=1)
+books.create_widget('Title', 0, 0)
+books.create_widget('Author', 0, 2)
+books.create_widget('Year', 1, 0)
+books.create_widget('ISBN', 1, 2)
 
-author_text = StringVar()
-author_box = Entry(window, textvariable=author_text)
-author_box.grid(row=0, column=3)
+books.create_display(2, 0, 6, 2)
 
-year_text = StringVar()
-year_box = Entry(window, textvariable=year_text)
-year_box.grid(row=1, column=1)
-
-isbn_text = StringVar()
-isbn_box = Entry(window, textvariable=isbn_text)
-isbn_box.grid(row=1, column=3)
-
-display_area = Listbox(window, height=6, width=30)
-display_area.grid(row=3, column=0, rowspan=6, columnspan=2)
-sb = Scrollbar(window)
-sb.grid(row=3, column=2, rowspan=6)
-display_area.configure(yscrollcommand=sb.set)
-sb.configure(command=display_area.yview)
-
-display_area.bind('<<ListboxSelect>>', get_selected_row)
-
-# side widgets
-view_all = Button(window, text='View All', width=15, command=view_command)
-view_all.grid(row=2, column=3, rowspan=2)
-
-
-search_entry = Button(window, text='Search Entry', width=15, command=search_command)
-search_entry.grid(row=4, column=3)
-
-
-add_entry = Button(window, text='Add Entry', width=15, command=add_command)
-add_entry.grid(row=5, column=3)
-
-
-update_button = Button(window, text='Update', width=15, command=update_command)
-update_button.grid(row=6, column=3)
-
-
-delete_button = Button(window, text='Delete', width=15, command=delete_command)
-delete_button.grid(row=7, column=3)
-
-close_button = Button(window, text='Close', width=15, command=close_command)
-close_button.grid(row=8, column=3)
-
+books.create_button('View all', 15, books.view_command, 2, 3)
+books.create_button('Search', 15, books.search_command, 3, 3)
+books.create_button('Add entry', 15, books.add_command, 4, 3)
+books.create_button('Update', 15, books.update_command, 5, 3)
+books.create_button('Delete', 15, books.delete_command, 6, 3)
+books.create_button('Close', 15, books.close_command, 7, 3)
 
 window.mainloop()
 

@@ -1,7 +1,7 @@
 # bookstore.py
 
-import backend
 from tkinter import *
+from backend import Database
 
 
 def get_selected_row(event):
@@ -20,32 +20,32 @@ def get_selected_row(event):
 
 def view_command():
     display_area.delete(0, END)
-    for item in backend.view():
+    for item in db.view():
         display_area.insert(END, item)
 
 
 def search_command():
     display_area.delete(0, END)
-    for item in backend.search(title_text.get(), author_text.get(), year_text.get(), isbn_text.get()):
+    for item in db.search(title_text.get(), author_text.get(), year_text.get(), isbn_text.get()):
         display_area.insert(END, item)
 
 
 def add_command():
-    backend.insert(title_text.get(), author_text.get(), year_text.get(), isbn_text.get())
+    db.insert(title_text.get(), author_text.get(), year_text.get(), isbn_text.get())
     display_area.delete(0, END)
-    for item in backend.search(title_text.get(), author_text.get(), year_text.get(), isbn_text.get()):
+    for item in db.search(title_text.get(), author_text.get(), year_text.get(), isbn_text.get()):
         display_area.insert(END, item)
     for entry in [title_box, author_box, year_box, isbn_box]:
         entry.delete(0, END)
 
 
 def update_command():
-    backend.update(title_text.get(), author_text.get(), year_text.get(), isbn_text.get(), selected_tuple[0])
+    db.update(title_text.get(), author_text.get(), year_text.get(), isbn_text.get(), selected_tuple[0])
     view_command()
 
 
 def delete_command():
-    backend.delete(selected_tuple[0])
+    db.delete(selected_tuple[0])
     view_command()
 
 
@@ -53,6 +53,7 @@ def close_command():
     window.destroy()
 
 
+db = Database('books.db')
 window = Tk()
 
 title_label = Label(window, text='Title')
